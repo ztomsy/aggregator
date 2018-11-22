@@ -2,3 +2,4 @@ ccxt
 influxdb
 numpy
 networkx
+matplotlib
