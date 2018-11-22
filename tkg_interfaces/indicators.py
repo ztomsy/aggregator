@@ -1,6 +1,12 @@
 import numpy as np
 
-def rsiFunc(prices, n=14):
+def computeRSI(prices, n=14):
+    '''
+    Return RSI for n last entries
+    :param prices: list of float
+    :param n: int
+    :return: ndarray [44.56611005 44.56611005 44.56611005...
+    '''
     deltas = np.diff(prices)
     seed = deltas[:n + 1]
     up = seed[seed >= 0].sum() / n
@@ -27,23 +33,39 @@ def rsiFunc(prices, n=14):
 
     return rsi
 
-def movingaverage(values, window):
+def computeMA(prices, window):
+    '''
+    Return ma from window
+    :param prices: list of float
+    :param window: int
+    :return: ndarray [4630.719 4631.027 4630.9...
+    '''
     weigths = np.repeat(1.0, window) / window
-    smas = np.convolve(values, weigths, 'valid')
+    smas = np.convolve(prices, weigths, 'valid')
     return smas  # as a numpy array
 
-def ExpMovingAverage(values, window):
+def computeEMA(prices, window):
+    '''
+    Return ema from window
+    :param prices: list of float
+    :param window: int
+    :return: ndarray [4630.719 4631.027 4630.9...
+    '''
     weights = np.exp(np.linspace(-1., 0., window))
     weights /= weights.sum()
-    a = np.convolve(values, weights, mode='full')[:len(values)]
+    a = np.convolve(prices, weights, mode='full')[:len(prices)]
     a[:window] = a[window]
     return a
 
 def computeMACD(x, slow=26, fast=12):
-    """
+    '''
     compute the MACD (Moving Average Convergence/Divergence) using a fast and slow exponential moving avg'
     return value is emaslow, emafast, macd which are len(x) arrays
-    """
-    emaslow = ExpMovingAverage(x, slow)
-    emafast = ExpMovingAverage(x, fast)
-    return emaslow, emafast, emafast - emaslow
+    :param x: list of float
+    :param slow: int
+    :param fast: int
+    :return: 3 x ndarray
+    '''
+    emaslow = computeEMA(x, slow)
+    emafast = computeEMA(x, fast)
+    return emafast - emaslow, emaslow, emafast

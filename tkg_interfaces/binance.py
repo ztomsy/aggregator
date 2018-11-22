@@ -29,7 +29,7 @@ class Binance():
     def fetchohlcv(self, symbol):
         # Fetch exchanges ticker for necessary pair
         try:
-            exohlcv = self.ex.fetch_ohlcv(symbol)
+            exohlcv = self.ex.fetch_ohlcv(symbol, timeframe='1m', since=None, limit=None)
         except Exception as e:
             # print(type(e).__name__, e.args, str(e))
             print('While fetching ohlcv next error occur: ', type(e).__name__, "!!!", e.args)

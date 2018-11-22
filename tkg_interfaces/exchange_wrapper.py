@@ -42,8 +42,8 @@ class ccxtExchangeWrapper:
         return self._ccxt.fetch_tickers()
 
     # generic method for fetching ohlcv
-    def _fetch_ohlcv(self, symbol):
-        return self._ccxt.fetch_ohlcv(symbol, symbol, timeframe='1m', since=None, limit=None, params={})
+    def _fetch_ohlcv(self, symbol, timeframe='1m', since=None, limit=None):
+        return self._ccxt.fetch_ohlcv(symbol, symbol, timeframe, since, limit, params={})
 
 
     def get_exchange_wrapper_id(self):
