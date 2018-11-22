@@ -26,6 +26,17 @@ class Binance():
             # print("Exiting")
             # sys.exit()
 
+    def fetchohlcv(self, symbol):
+        # Fetch exchanges ticker for necessary pair
+        try:
+            exohlcv = self.ex.fetch_ohlcv(symbol)
+        except Exception as e:
+            # print(type(e).__name__, e.args, str(e))
+            print('While fetching ohlcv next error occur: ', type(e).__name__, "!!!", e.args)
+            print("Exiting")
+            sys.exit()
+        return exohlcv
+
     def fetchtickers(self):
         # Fetch exchanges ticker for necessary pair
         try:
@@ -60,6 +71,13 @@ class Binance():
 
 #        move to another class-file construction
 #       ------------------------------------------
+    @staticmethod
+    def get_price_matr(tickers):
+        matr=dict()
+        for symbol in tickers:
+            base, quote = symbol.split('/')
+            bb = dict(mprice=tickers[symbol]['bid'])
+            matr[quote] = bb
 
     @staticmethod
     def get_basic_triangles_from_markets(markets):
@@ -188,10 +206,12 @@ class Binance():
 
         # define start currencies list
         # todo get quote currencies list from exchange by adding uniqe quote currencies into list
-        startcurlist = ['USDT', 'BTC', 'ETH']
+
+        startcurlist = ['BTC']
 
         trilist = self.get_basic_triangles_from_markets(self.ex.markets)
         filteredtrilist = self.get_all_triangles(trilist, startcurlist)
+        matr = self.get_price_matr(exFetT)
         finaltrilist = self.fill_triangles(filteredtrilist, startcurlist, exFetT, 0.005)
 
         for tri in finaltrilist:
@@ -253,7 +273,8 @@ class Binance():
             print('Fetching tickers from %s...' % exName)
             excTickers = exc.fetch_tickers()
             return _save_balances_to_dict(excBalance, excTickers,
-                                         exName)  #### todo Have to return dicts and call for function in main ###
+                                         exName)
+            #### todo Have to return dicts and call for function in main ###
 
         except ccxt.DDoSProtection as e:
             print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
