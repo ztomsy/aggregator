@@ -19,7 +19,7 @@ def main():
         # todo catch exc load errors
         exc.loadexchange()
         while True:
-            ohlcv = exc.fetchohlcv(symbol, timeframe='1m', since=None, limit=None)
+            ohlcv = exc.fetchohlcv(symbol)
 
             # datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
             # date = [datetime.utcfromtimestamp(x[0]/1000).strftime("%m/%d") for x in ohlcv]
@@ -90,14 +90,9 @@ def main():
                 newAr.append(appendLine)
                 x += 1
 
-
-
             SP = len(date[MA2 - 1:])
 
-            rsi = rsiFunc(closep)
-
-
-
+            rsi = TKG.computeRSI(closep)
 
 
     except KeyboardInterrupt:
