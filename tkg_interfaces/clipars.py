@@ -9,7 +9,9 @@ def Clipars(args):
     ticker = write tickers
     splitticker = write alt tickers
     derivative = write derivative data
-    balances = to wite your balance''')
+    tickmas = to wite different moving averages
+    ohlcvind = to write indicators on ohlcv candle data
+    ''')
 
     #can be parsed from exchange list defined above
     parser.add_argument('-ex', '--exchange', type=str, required=True, help='''
