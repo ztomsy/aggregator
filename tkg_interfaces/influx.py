@@ -20,4 +20,5 @@ class Influx:
         except Exception as e:
             print('Querying data from InfluxDB failed: ', type(e).__name__, "-=-=-", e.args, '-=-=-', str(e))
 
+# TODO add another methods from influxdb package
 

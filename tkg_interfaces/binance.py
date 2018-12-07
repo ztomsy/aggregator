@@ -27,7 +27,9 @@ class Binance():
             # sys.exit()
 
     def fetchohlcv(self, symbol):
-        # Fetch exchanges ticker for necessary pair
+        """
+        Fetch exchanges ticker for necessary pair
+        """
         try:
             exohlcv = self.ex.fetch_ohlcv(symbol, timeframe='1m', since=None, limit=None)
         except Exception as e:
@@ -53,8 +55,9 @@ class Binance():
         updtlist = []
 
         for symbol in exFetT:
-            if exFetT[symbol]['bid'] is not None and exFetT[symbol]['ask'] is not None and exFetT[symbol]['bid'] != 0 and exFetT[symbol]['ask'] != 0:
-                updtmsg = {}
+            if exFetT[symbol]['bid'] is not None and exFetT[symbol]['ask'] is not None \
+                    and exFetT[symbol]['bid'] != 0 and exFetT[symbol]['ask'] != 0:
+                updtmsg = dict()
                 updtmsg["measurement"] = "ticker_data"
                 updtmsg["tags"] = {"ticker": symbol, "exchange": "binance"}
                 updtmsg["fields"] = dict()
@@ -186,7 +189,10 @@ class Binance():
 # 
 
     def fetchderivatives(self):
-        # Fetch exchanges ticker for necessary pair
+        """
+        Fetch exchanges ticker for necessary pair
+        :return:
+        """
         try:
             exFetT = self.ex.fetch_bids_asks()
         except Exception as e:
