@@ -3,3 +3,4 @@ influxdb
 numpy
 networkx
 matplotlib
+pandas
