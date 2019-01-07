@@ -20,7 +20,7 @@ def main():
         # Initialize data collecting for ask and bid to count mas
         ask_data, bid_data = [], []
 
-        # initialise necesseray exchange class constructor
+        # initialise necessary exchange class constructor(TODO convert to function)
         if option.exchange.lower() == 'kucoin':
             exc = TKG.Kucoin()
         if option.exchange.lower() == 'binance':
@@ -31,16 +31,15 @@ def main():
             exc = TKG.Poloniex()
         if option.exchange.lower() == 'bittrex':
             exc = TKG.Bittrex()
-        # initialise database class
-        dbclient = TKG.Influx()
         # load exchange
-        # todo catch exc load errors
         exc.loadexchange()
         while True:
             '''Load and write to DB different data, defined as argument'''
             if option.fetchtype.lower() == 'ticker':
                 # load tickers
                 exc.fetchtickers()
+                # initialise database class
+                dbclient = TKG.Influx('TKG')
                 # save to db
                 dbclient.writepoints(exc.curtickers)
                 msg1 = "#%s %s InfluxDB updated %s from %s" % (curtick,
@@ -49,8 +48,10 @@ def main():
                                                                option.exchange.lower())
                 print(msg1)
             if option.fetchtype.lower() == 'derivative':
-                 # load derivative data    
+                # load derivative data
                 exc.fetchderivatives()
+                # initialise database class
+                dbclient = TKG.Influx('TKG')
                 # write derivatives to db
                 dbclient.writepoints(exc.curderivatives)
                 msg1 = "#%s %s InfluxDB updated %s from %s" % (curtick,
@@ -63,6 +64,8 @@ def main():
                 # single value per ticker
                 # load tickers
                 exc.splittickers()
+                # initialise database class
+                dbclient = TKG.Influx('TKG')
                 # save to db
                 dbclient.writepoints(exc.newtickers)
                 msg1 = "#%s %s InfluxDB updated %s from %s" % (curtick,
@@ -106,6 +109,8 @@ def main():
                     updtmsg["fields"]['ema20bid'] = ema3_bid[-1]
                     updtmsg["fields"]['ema10bid'] = ema4_bid[-1]
                     updtlist.append(updtmsg)
+                    # initialise database class
+                    dbclient = TKG.Influx('TKG')
                     # save to db
                     dbclient.writepoints(updtlist)
                     msg1 = "#%s %s InfluxDB updated %s from %s" % (curtick,
@@ -144,6 +149,8 @@ def main():
                 updtlist.append(updtmsg)
                 # save to db
                 dbclient.writepoints(updtlist)
+                # initialise database class
+                dbclient = TKG.Influx('TKG')
                 # save to db
                 dbclient.writepoints(exc.curtickers)
                 msg1 = "#%s %s InfluxDB updated %s from %s" % (curtick,
@@ -151,7 +158,31 @@ def main():
                                                                option.fetchtype.lower(),
                                                                option.exchange.lower())
                 print(msg1)
-
+            if option.fetchtype.lower() == 'ob':
+                # load exchange
+                exc.loadexchange()
+                # load ob
+                exc.fetchob(symbol)
+                updtlist = list()
+                askupdtmsg = dict()
+                askupdtmsg["measurement"] = symbol
+                askupdtmsg["tags"] = {"side": "ask", "exchange": option.exchange.lower()}
+                askupdtmsg["fields"] = exc.ob._ask_book
+                updtlist.append(askupdtmsg)
+                bidupdtmsg = dict()
+                bidupdtmsg["measurement"] = symbol
+                bidupdtmsg["tags"] = {"side": "bid", "exchange": option.exchange.lower()}
+                bidupdtmsg["fields"] = exc.ob._bid_book
+                updtlist.append(bidupdtmsg)
+                # initialise database class
+                dbclient = TKG.Influx('TKG_obs')
+                # save to db
+                dbclient.writepoints(updtlist)
+                msg1 = "#%s %s InfluxDB updated %s from %s" % (curtick,
+                                                               datetime.datetime.now(),
+                                                               option.fetchtype.lower(),
+                                                               option.exchange.lower())
+                print(msg1)
             curtick = curtick + 1
             time.sleep(option.pause)
 
