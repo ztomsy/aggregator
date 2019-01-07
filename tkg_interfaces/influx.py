@@ -3,8 +3,8 @@ from influxdb import InfluxDBClient
 
 class Influx:
 
-    def __init__(self):
-        self.client = InfluxDBClient('18.182.117.179', 8086, 'write_data', 'write_data', 'TKG')
+    def __init__(self, db):
+        self.client = InfluxDBClient('18.182.117.179', 8086, 'write_data', 'write_data', db)
         # self.client = InfluxDBClient('localhost', 8086, 'admin', 'admin', 'TKG') # local db
 
     def writepoints(self, rightjson):
