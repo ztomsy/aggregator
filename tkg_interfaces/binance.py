@@ -1,19 +1,19 @@
 import ccxt
 import sys
-# use networkX to find all triangles on graph
-import networkx as nx
-import numpy as np
-
+import networkx as nx  # use networkX to find all triangles on graph
+import numpy as np  # import numpy to return np array as result of some functions
+from .orderbook3 import simpleOrderbook  # basic class for ob
 from .exconfig import settings
 
 class Binance():
 
-    ex = ... # type: ccxt.base
+    ex = ...  # type: ccxt.base
 
     def __init__(self):
         self.curtickers = []
         self.newtickers = []
         self.curderivatives = []
+        self.ob = simpleOrderbook()
         # self.updtlist = []
 
     def loadexchange(self):
@@ -25,6 +25,23 @@ class Binance():
             print('While initialising Kucoin: ', type(e).__name__, "!!!", e.args, ' ')
             # print("Exiting")
             # sys.exit()
+
+    def fetchob(self, symbol):
+        # Fetch exchanges ticker for necessary pair
+        try:
+            exFetobs = self.ex.fetch_order_book(symbol)  # fetch_order_book(symbol, limit=100)
+        except Exception as e:
+            # print(type(e).__name__, e.args, str(e))
+            print('While fetching orderbook next error occur: ', type(e).__name__, "!!!", e.args)
+            print("Exiting")
+            sys.exit()
+        # Wrap ob from ccxt into our ob class
+        for _ in exFetobs['bids']:
+            self.ob._bid_book[_[0]] = _[1]
+            self.ob._bid_book_prices.append(_[0])
+        for _ in exFetobs['asks']:
+            self.ob._ask_book[_[0]] = _[1]
+            self.ob._ask_book_prices.append(_[0])
 
     def fetchohlcv(self, symbol, frame='1m'):
         """
