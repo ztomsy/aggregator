@@ -11,15 +11,12 @@ option = TKG.Clipars(sys.argv[1:])
 
 def main():
     try:
+        #define symbol for tickmas and ohlcvind(TODO Convert to parameter)
+        symbol = "BTC/USDT"
+
         # define counter
         curtick = 0
-        # define symbol and mas for ma collecting
-        symbol = "BTC/USDT"
-        MA1 = 100
-        MA2 = 50
-        MA3 = 20
-        MA4 = 10
-        window = 100
+
         # Initialize data collecting for ask and bid to count mas
         ask_data, bid_data = [], []
 
@@ -74,6 +71,12 @@ def main():
                                                                option.exchange.lower())
                 print(msg1)
             if option.fetchtype.lower() == 'tickmas':
+                # define mas
+                MA1 = 100
+                MA2 = 50
+                MA3 = 20
+                MA4 = 10
+                window = 100
                 # write mas data to db
                 ticker = exc.ex.fetch_ticker(symbol)
                 ask_data.append(ticker['ask'])
@@ -148,6 +151,7 @@ def main():
                                                                option.fetchtype.lower(),
                                                                option.exchange.lower())
                 print(msg1)
+
             curtick = curtick + 1
             time.sleep(option.pause)
 
