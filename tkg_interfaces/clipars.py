@@ -7,6 +7,7 @@ def Clipars(args):
     parser.add_argument('-ft', '--fetchtype', type=str, required=True, help='''
     Fetch type.
     ticker = write tickers
+    ob = orderbook data(look orderbook class docstring) 
     splitticker = write alt tickers
     derivative = write derivative data
     tickmas = to wite different moving averages
