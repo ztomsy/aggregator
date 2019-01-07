@@ -8,3 +8,4 @@ from .exconfig import settings
 from .influx import Influx
 from .clipars import Clipars
 from .indicators import *
+from .orderbook3 import *
