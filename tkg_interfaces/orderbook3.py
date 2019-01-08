@@ -37,6 +37,19 @@ class simpleOrderbook(object):
         self._bid_book_prices = list()
         self._ask_book = dict()
         self._ask_book_prices = list()
+
+    def update_ob(self, exFetobs):
+        '''
+        Wrap ob from ccxt into our ob class
+        :param exFetobs: pure ccxt orderbook dict
+        '''
+        for _ in exFetobs['bids']:
+            self._bid_book[_[0]] = _[1]
+            self._bid_book_prices.append(_[0])
+        for _ in exFetobs['asks']:
+            self._ask_book[_[0]] = _[1]
+            self._ask_book_prices.append(_[0])
+
     def report_top_of_book(self, now_time):
         '''Update the top-of-book prices and sizes'''
         best_bid_price = self._bid_book_prices[-1]
