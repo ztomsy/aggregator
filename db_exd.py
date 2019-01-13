@@ -13,14 +13,11 @@ def main():
     try:
         #define symbol for tickmas and ohlcvind(TODO Convert to parameter)
         symbol = "BTC/USDT"
-
         # define counter
         curtick = 0
-
         # Initialize data collecting for ask and bid to count mas
         ask_data, bid_data = [], []
-
-        # initialise necessary exchange class constructor(TODO convert to function)
+        # initialise necessary exchange class constructor(TODO convert to attr function)
         if option.exchange.lower() == 'kucoin':
             exc = TKG.Kucoin()
         if option.exchange.lower() == 'binance':
@@ -164,11 +161,13 @@ def main():
                 # load ob
                 exc.fetchob(symbol)
                 updtlist = list()
+                # prepare ask update message
                 askupdtmsg = dict()
                 askupdtmsg["measurement"] = symbol
                 askupdtmsg["tags"] = {"side": "ask", "exchange": option.exchange.lower()}
                 askupdtmsg["fields"] = exc.ob._ask_book
                 updtlist.append(askupdtmsg)
+                # prepare bid update message
                 bidupdtmsg = dict()
                 bidupdtmsg["measurement"] = symbol
                 bidupdtmsg["tags"] = {"side": "bid", "exchange": option.exchange.lower()}
