@@ -1,5 +1,7 @@
 import bisect # For list sorting and injection
 import pandas as pd
+import time
+import datetime
 
 from enum import Enum
 
@@ -13,6 +15,57 @@ class OType(Enum):
     ADD = 1
     CANCEL = 2
     MODIFY = 3
+
+class Orderbook1(object):
+    '''
+    Orderbook1 tracks returned obs from an exchange
+
+    Orderbook is a set of historical top of the book data and dictionaries containing current bids and asks.
+    Public attributes:
+    Public methods:
+    report_top_of_book() return tob with timestamp
+    update_ob() fill dicts with current ob data
+    '''
+    def __init__(self):
+        '''
+        Initialize the Orderbook with a set of empty dicts and other defaults
+
+        _bid_book and _ask_book: dicts of current order book state and dicts of orders
+        _top_book_states are dict of dicts with tob data indexed by timestamp
+        '''
+        self._bid_book = list()
+        self._tob = list()
+        self._ask_book = list()
+
+    def update_ob(self, exFetobs):
+        '''
+        Wrap ob from ccxt into our ob class
+        :param exFetobs: pure ccxt orderbook dict
+        '''
+        self._bid_book.clear()
+        self._ask_book.clear()
+        self._bid_book = exFetobs['bids']
+        self._ask_book = exFetobs['asks']
+        self._tob.append(self.report_top_of_book())
+        # self._tob.append(self.report_top_of_book(time.time_ns())) # worked only in 3.7
+
+    def report_top_of_book(self):
+        '''report the top-of-book data'''
+        # So we relay on ccxt in terms of sorting in that way
+        best_bid_price = self._bid_book[0][0]
+        best_bid_size = self._bid_book[0][1]
+        best_ask_price = self._ask_book[0][0]
+        best_ask_size = self._ask_book[0][1]
+        timenow = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]  # slicing nanoseconds precision
+        tob = {'timestamp': timenow,
+               'best_bid': best_bid_price,
+               'bid_size': best_bid_size,
+               'best_ask': best_ask_price,
+               'ask_size': best_ask_size,
+               'mid_price': int((best_ask_price + best_bid_price) / 2)
+               }
+        return tob
+
 
 
 class simpleOrderbook(object):
