@@ -13,6 +13,8 @@ Data collected is useful for all sorts of different uses. Not only predicting fu
 deep learning can also be used for uncovering the price changes between different exchanges, 
 unrevealing arbitrage opportunities before it happens.
 
+
+![Simple architecture](simple-architecture.png)
 1. Use ccxt library to fetch data from Binance, Kucoin, ...
 2. Store it in InfluxDB
 3. Easily fetch it from InfluxDb as Pandas DataFrame for streaming analyzing
