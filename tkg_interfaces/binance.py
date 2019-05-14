@@ -3,7 +3,7 @@ import sys
 import time
 import networkx as nx  # use networkX to find all triangles on graph
 import numpy as np  # import numpy to return np array as result of some functions
-from .orderbook3 import simpleOrderbook  # basic class for ob
+# from .orderbook3 import simpleOrderbook  # basic class for ob
 from .exconfig import Settings
 
 class Binance():
@@ -14,7 +14,7 @@ class Binance():
         self.logger = logger
         self.curtickers = []
         self.curderivatives = []
-        self.ob = simpleOrderbook()
+        # self.ob = simpleOrderbook()
         # self.updtlist = []
 
     def loadexchange(self):
@@ -42,12 +42,12 @@ class Binance():
             self.logger.error("Exiting")
             sys.exit()
         # Wrap ob from ccxt into our ob class
-        for _ in exFetobs['bids']:
-            self.ob._bid_book[_[0]] = _[1]
-            self.ob._bid_book_prices.append(_[0])
-        for _ in exFetobs['asks']:
-            self.ob._ask_book[_[0]] = _[1]
-            self.ob._ask_book_prices.append(_[0])
+        # for _ in exFetobs['bids']:
+        #     self.ob._bid_book[_[0]] = _[1]
+        #     self.ob._bid_book_prices.append(_[0])
+        # for _ in exFetobs['asks']:
+        #     self.ob._ask_book[_[0]] = _[1]
+        #     self.ob._ask_book_prices.append(_[0])
 
     def fetchohlcv(self, symbol, frame='1m'):
         """
