@@ -8,7 +8,6 @@ def Clipars(args):
     Fetch type.
     ticker = write tickers
     ob = orderbook data(look orderbook class docstring) 
-    splitticker = write alt tickers
     derivative = write derivative data
     tickmas = to wite different moving averages
     ohlcvind = to write indicators on ohlcv candle data
