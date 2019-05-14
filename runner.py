@@ -4,15 +4,19 @@ import sys
 import tkg_interfaces as TKG
 
 
+
 ####################
 option = TKG.Clipars(sys.argv[1:])
 ####################
 
+# Init logger and define log_level verbosity
+logger = TKG.CustomLogger.setup_custom_logger(name='TickerFetcher', log_level='DEBUG')
+
+# define symbol for tickmas and ohlcvind(TODO Convert to parameter)
+symbol = "BTC/USDT"
 
 def main():
     try:
-        #define symbol for tickmas and ohlcvind(TODO Convert to parameter)
-        symbol = "BTC/USDT"
         # define counter
         curtick = 0
         # Initialize data collecting for ask and bid to count mas
@@ -21,7 +25,7 @@ def main():
         if option.exchange.lower() == 'kucoin':
             exc = TKG.Kucoin()
         if option.exchange.lower() == 'binance':
-            exc = TKG.Binance()
+            exc = TKG.Binance(logger)
         if option.exchange.lower() == 'kraken':
             exc = TKG.Kraken()
         if option.exchange.lower() == 'poloniex':
@@ -30,46 +34,23 @@ def main():
             exc = TKG.Bittrex()
         # load exchange
         exc.loadexchange()
+        # initialise database class with name
+        dbclient = TKG.Influx('YAT')
+
         while True:
-            '''Load and write to DB different data, defined as argument'''
+            # Load and write to DB different data, defined as argument
             if option.fetchtype.lower() == 'ticker':
                 # load tickers
                 exc.fetchtickers()
-                # initialise database class
-                dbclient = TKG.Influx('TKG')
                 # save to db
                 dbclient.writepoints(exc.curtickers)
-                msg1 = "#%s %s InfluxDB updated %s from %s" % (curtick,
-                                                               datetime.datetime.now(),
-                                                               option.fetchtype.lower(),
-                                                               option.exchange.lower())
-                print(msg1)
+
             if option.fetchtype.lower() == 'derivative':
                 # load derivative data
                 exc.fetchderivatives()
-                # initialise database class
-                dbclient = TKG.Influx('TKG')
                 # write derivatives to db
                 dbclient.writepoints(exc.curderivatives)
-                msg1 = "#%s %s InfluxDB updated %s from %s" % (curtick,
-                                                                datetime.datetime.now(),
-                                                                option.fetchtype.lower(),
-                                                                option.exchange.lower())
-                print(msg1)
-            if option.fetchtype.lower() == 'splitticker':    
-                # Alternative variant to use another db structure with 
-                # single value per ticker
-                # load tickers
-                exc.splittickers()
-                # initialise database class
-                dbclient = TKG.Influx('TKG')
-                # save to db
-                dbclient.writepoints(exc.newtickers)
-                msg1 = "#%s %s InfluxDB updated %s from %s" % (curtick,
-                                                               datetime.datetime.now(),
-                                                               option.fetchtype.lower(),
-                                                               option.exchange.lower())
-                print(msg1)
+
             if option.fetchtype.lower() == 'tickmas':
                 # define mas
                 MA1 = 100
@@ -106,15 +87,9 @@ def main():
                     updtmsg["fields"]['ema20bid'] = ema3_bid[-1]
                     updtmsg["fields"]['ema10bid'] = ema4_bid[-1]
                     updtlist.append(updtmsg)
-                    # initialise database class
-                    dbclient = TKG.Influx('TKG')
                     # save to db
                     dbclient.writepoints(updtlist)
-                    msg1 = "#%s %s InfluxDB updated %s from %s" % (curtick,
-                                                                   datetime.datetime.now(),
-                                                                   option.fetchtype.lower(),
-                                                                   option.exchange.lower())
-                    print(msg1)
+
             if option.fetchtype.lower() == 'ohlcvind':
                 # load ohlcv 1 min candles
                 ohlcv = exc.fetchohlcv(symbol, frame='1m')
@@ -146,15 +121,7 @@ def main():
                 updtlist.append(updtmsg)
                 # save to db
                 dbclient.writepoints(updtlist)
-                # initialise database class
-                dbclient = TKG.Influx('TKG')
-                # save to db
-                dbclient.writepoints(exc.curtickers)
-                msg1 = "#%s %s InfluxDB updated %s from %s" % (curtick,
-                                                               datetime.datetime.now(),
-                                                               option.fetchtype.lower(),
-                                                               option.exchange.lower())
-                print(msg1)
+
             if option.fetchtype.lower() == 'ob':
                 # load exchange
                 exc.loadexchange()
@@ -173,15 +140,14 @@ def main():
                 bidupdtmsg["tags"] = {"side": "bid", "exchange": option.exchange.lower()}
                 bidupdtmsg["fields"] = exc.ob._bid_book
                 updtlist.append(bidupdtmsg)
-                # initialise database class
-                dbclient = TKG.Influx('TKG_obs')
                 # save to db
                 dbclient.writepoints(updtlist)
-                msg1 = "#%s %s InfluxDB updated %s from %s" % (curtick,
-                                                               datetime.datetime.now(),
-                                                               option.fetchtype.lower(),
-                                                               option.exchange.lower())
-                print(msg1)
+
+            msg1 = "#%s %s InfluxDB updated %s from %s" % (curtick,
+                                                           datetime.datetime.now(),
+                                                           option.fetchtype.lower(),
+                                                           option.exchange.lower())
+            logger.info(msg1)
             curtick = curtick + 1
             time.sleep(option.pause)
 

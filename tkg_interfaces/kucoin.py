@@ -1,6 +1,6 @@
 import ccxt
 import sys
-from .exconfig import settings
+from .exconfig import Settings
 
 class Kucoin:
 
@@ -14,7 +14,7 @@ class Kucoin:
     def loadexchange(self):
 
         try:
-            self.ex = ccxt.kucoin({"apiKey": settings.kucoin1ApiKey, "secret": settings.kucoin1Sec})
+            self.ex = ccxt.kucoin({"apiKey": Settings.kucoin1['apiKey'], "secret": Settings.kucoin1['secret']})
         except Exception as e:
             # print(type(e).__name__, e.args, str(e))
             print('Initialising kucoin: ', type(e).__name__, "!!!", e.args, ' ')

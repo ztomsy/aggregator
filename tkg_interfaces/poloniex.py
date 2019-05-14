@@ -1,6 +1,6 @@
 import ccxt
 import sys
-from .exconfig import settings
+from .exconfig import Settings
 
 class Poloniex:
 
@@ -14,7 +14,7 @@ class Poloniex:
     def loadexchange(self):
 
         try:
-            self.ex = ccxt.poloniex({"apiKey": settings.poloniex1ApiKey, "secret": settings.poloniex1Sec})
+            self.ex = ccxt.poloniex({"apiKey": Settings.poloniex1ApiKey, "secret": Settings.poloniex1Sec})
         except Exception as e:
             # print(type(e).__name__, e.args, str(e))
             print('Initialising poloniex: ', type(e).__name__, "!!!", e.args, ' ')

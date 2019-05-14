@@ -1,39 +1,45 @@
 import ccxt
 import sys
+import time
 import networkx as nx  # use networkX to find all triangles on graph
 import numpy as np  # import numpy to return np array as result of some functions
 from .orderbook3 import simpleOrderbook  # basic class for ob
-from .exconfig import settings
+from .exconfig import Settings
 
 class Binance():
 
     ex = ...  # type: ccxt.base
 
-    def __init__(self):
+    def __init__(self, logger: object = None):
+        self.logger = logger
         self.curtickers = []
-        self.newtickers = []
         self.curderivatives = []
         self.ob = simpleOrderbook()
         # self.updtlist = []
 
     def loadexchange(self):
-        # Load exchange
+        """
+        Load exchange
+        :return:
+        """
         try:
-            self.ex = ccxt.binance({"apiKey": settings.binance1ApiKey, "secret": settings.binance1Secret})
+            self.ex = ccxt.binance({"apiKey": Settings.binance2['apiKey'], "secret": Settings.binance2['secret']})
         except Exception as e:
-            # print(type(e).__name__, e.args, str(e))
-            print('While initialising Kucoin: ', type(e).__name__, "!!!", e.args, ' ')
-            # print("Exiting")
-            # sys.exit()
+            self.logger.error('While loading Binance next error occur: ', type(e).__name__, "!!!", e.args)
+            self.logger.error("Exiting")
+            sys.exit()
 
     def fetchob(self, symbol):
-        # Fetch exchanges ticker for necessary pair
+        """
+        Fetch exchanges ticker for necessary pair
+        :param symbol:
+        :return:
+        """
         try:
             exFetobs = self.ex.fetch_order_book(symbol)  # fetch_order_book(symbol, limit=100)
         except Exception as e:
-            # print(type(e).__name__, e.args, str(e))
-            print('While fetching orderbook next error occur: ', type(e).__name__, "!!!", e.args)
-            print("Exiting")
+            self.logger.error('While fetching orderbook next error occur: ', type(e).__name__, "!!!", e.args)
+            self.logger.error("Exiting")
             sys.exit()
         # Wrap ob from ccxt into our ob class
         for _ in exFetobs['bids']:
@@ -50,20 +56,21 @@ class Binance():
         try:
             exohlcv = self.ex.fetch_ohlcv(symbol, timeframe=frame, since=None, limit=None)
         except Exception as e:
-            # print(type(e).__name__, e.args, str(e))
-            print('While fetching ohlcv next error occur: ', type(e).__name__, "!!!", e.args)
-            print("Exiting")
+            self.logger.error('While fetching ohlcv next error occur: ', type(e).__name__, "!!!", e.args)
+            self.logger.error("Exiting")
             sys.exit()
         return exohlcv
 
     def fetchtickers(self):
-        # Fetch exchanges ticker for necessary pair
+        """
+        Fetch exchanges ticker for necessary pair
+        :return:
+        """
         try:
             exFetT = self.ex.fetch_bids_asks()
         except Exception as e:
-            # print(type(e).__name__, e.args, str(e))
-            print('While fetching tickers next error occur: ', type(e).__name__, "!!!", e.args)
-            print("Exiting")
+            self.logger.error('While fetching tickers next error occur: ', type(e).__name__, "!!!", e.args)
+            self.logger.error("Exiting")
             sys.exit()
         # Wrap raw ticker data from ccxt into list of necessary dicts
         # ticker_data, ticker=<symbol>,exchange=<exchange> bid=1,ask=10,last=17
@@ -89,8 +96,128 @@ class Binance():
 
         self.curtickers = updtlist
 
-#        move to another class-file construction
-#       ------------------------------------------
+    def fetchderivatives(self):
+        """
+        Fetch exchanges ticker for necessary pair
+        :return:
+        """
+        try:
+            exFetT = self.ex.fetch_bids_asks()
+        except Exception as e:
+            # print(type(e).__name__, e.args, str(e))
+            print('While fetching tickers next error occur: ', type(e).__name__, "!!!", e.args)
+            print("Exiting")
+            sys.exit()
+        # Wrap raw ticker data from ccxt into list of necessary triangles result dicts
+
+        # define new return dict and list
+        updtlist = []
+
+        # define triangle lists
+        trilist = []
+        filteredtrilist = []
+        finaltrilist = []
+
+        # define start currencies list
+        # todo get quote currencies list from exchange by adding unique quote currencies into list
+
+        startcurlist = ['BTC']
+
+        trilist = self.get_basic_triangles_from_markets(self.ex.markets)
+        filteredtrilist = self.get_all_triangles(trilist, startcurlist)
+        matr = self.get_price_matr(exFetT)
+        finaltrilist = self.fill_triangles(filteredtrilist, startcurlist, exFetT, 0.005)
+
+        for tri in finaltrilist:
+            if tri["result"] is not None:
+                updtmsg = {}
+                updtmsg["measurement"] = "ticker_derivatives"
+                updtmsg["tags"] = {"ticker": tri["triangle"], "exchange": "binance"}
+                updtmsg["fields"] = dict()
+                updtmsg["fields"]['result'] = tri['result']
+                updtlist.append(updtmsg)
+
+        self.curderivatives = updtlist
+
+    def myBalance(self, exApikey, exSec, exName):
+        """
+        Fetch account balance from an exchange
+        only binance now!
+        :param exApikey:
+        :param exSec:
+        :param exName:
+        :return:
+        """
+        try:
+            self.logger.info('Connecting to %s...'.format(exName))
+            exc = ccxt.binance({'apiKey': exApikey, 'secret': exSec})
+            excBalance = exc.fetch_balance()
+            time.sleep(5.0)
+            # Fetch tickers from an exchange
+            print('Fetching tickers from %s...' % exName)
+            excTickers = exc.fetch_tickers()
+            return self._save_balances_to_dict(excBalance, excTickers,
+                                         exName)
+        except ccxt.DDoSProtection as e:
+            print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
+            return {}
+        except ccxt.RequestTimeout as e:
+            print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
+            return {}
+        except ccxt.ExchangeNotAvailable as e:
+            print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+            return {}
+        except ccxt.AuthenticationError as e:
+            print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+            return {}
+
+    @staticmethod
+    def getRightName(cur_cur):
+        if cur_cur.upper() != 'USDT':
+            return "%s/BTC" % cur_cur.upper()
+        else:
+            return "BTC/USDT"
+
+    # TODO Create pure balance fetch function
+    @staticmethod
+    def _save_balances_to_dict(self, exBalance, exTicker, exName):
+        # output the result for each non zero currency which BTC amount more then 0.00005
+        # define new return dict
+        updtmsg = {}
+        # updtMsg['exData'] = []
+        # Total_BTC_amount
+        totalitarian = 0
+        # fill updtMsg dict
+        # write data in next format: [{"measurement":"Balances","tags":{"tkgid":"bta3"},"fields":{"BTC":0.64456585,"ETH":3.01}}]
+        updtmsg["measurement"] = "Balances"
+        updtmsg["tags"] = {"tkgid": exName}
+        updtmsg["fields"] = dict()
+
+        for cur_cur in exBalance['total'].keys():
+            if exBalance['total'][cur_cur] > 0.0001:
+                if cur_cur == 'BTC':
+                    updtmsg["fields"][cur_cur] = exBalance['total'][cur_cur]
+                    totalitarian = totalitarian + exBalance['total'][cur_cur]
+                elif cur_cur == 'USDT':
+                    updtmsg["fields"][cur_cur] = exBalance['total'][cur_cur]
+                    totalitarian = totalitarian + exBalance['total'][cur_cur] / exTicker[self.getRightName(cur_cur)][
+                        'close']
+                elif self.getRightName(cur_cur) in exTicker:
+                    cur_cur_btcprice = exTicker[self.getRightName(cur_cur)]['close']
+                    if exBalance['total'][cur_cur] * cur_cur_btcprice > 0.00005:
+                        updtmsg["fields"][cur_cur] = exBalance['total'][cur_cur]
+                        totalitarian = totalitarian + exBalance['total'][cur_cur] * cur_cur_btcprice
+
+        updtmsg["fields"]['TotalBTC'] = totalitarian
+        updtmsg["fields"]['TotalETH'] = totalitarian / exTicker[self.getRightName('ETH')]['close']
+        updtmsg["fields"]['TotalUSDT'] = float(totalitarian * exTicker[self.getRightName('USDT')]['close'])
+
+        updtlist = []
+        updtlist = [updtmsg]
+
+        return updtlist
+
+# TODO move to other class
     @staticmethod
     def get_price_matr(tickers):
         matr=dict()
@@ -201,158 +328,4 @@ class Binance():
 
         return tri_list
 
-#
-#----------------------------------
-# 
 
-    def fetchderivatives(self):
-        """
-        Fetch exchanges ticker for necessary pair
-        :return:
-        """
-        try:
-            exFetT = self.ex.fetch_bids_asks()
-        except Exception as e:
-            # print(type(e).__name__, e.args, str(e))
-            print('While fetching tickers next error occur: ', type(e).__name__, "!!!", e.args)
-            print("Exiting")
-            sys.exit()
-        # Wrap raw ticker data from ccxt into list of necessary triangles result dicts
-
-        # define new return dict and list
-        updtlist = []
-
-        # define triangle lists
-        trilist = []
-        filteredtrilist = []
-        finaltrilist = []
-
-        # define start currencies list
-        # todo get quote currencies list from exchange by adding uniqe quote currencies into list
-
-        startcurlist = ['BTC']
-
-        trilist = self.get_basic_triangles_from_markets(self.ex.markets)
-        filteredtrilist = self.get_all_triangles(trilist, startcurlist)
-        matr = self.get_price_matr(exFetT)
-        finaltrilist = self.fill_triangles(filteredtrilist, startcurlist, exFetT, 0.005)
-
-        for tri in finaltrilist:
-            if tri["result"] is not None:
-                updtmsg = {}
-                updtmsg["measurement"] = "ticker_derivatives"
-                updtmsg["tags"] = {"ticker": tri["triangle"], "exchange": "binance"}
-                updtmsg["fields"] = dict()
-                updtmsg["fields"]['result'] = tri['result']
-                updtlist.append(updtmsg)
-
-        self.curderivatives = updtlist
-
-
-    def splittickers(self):
-        # Fetch exchanges ticker for necessary pair
-        try:
-            exFetT = self.ex.fetch_bids_asks()
-        except Exception as e:
-            # print(type(e).__name__, e.args, str(e))
-            print('While fetching tickers next error occur: ', type(e).__name__, "!!!", e.args)
-            print("Exiting")
-            sys.exit()
-
-        # Wrap raw ticker data from ccxt into list of necessary dicts
-        # bid, ticker=<symbol>,exchange=<exchange> value=0.0758659
-        # ask, ticker=<symbol>,exchange=<exchange> value=0.0758654
-        # last, ticker=<symbol>,exchange=<exchange> value=0.0758655
-        # volume24, ticker=<symbol>,exchange=<exchange> value=100.256354
-        # exts, ticker=<symbol>,exchange=<exchange> value=  exchange timestamp
-
-
-        # define new return dict and list
-        updtlist2 = []
-        # define measurement list
-        measurementlist = ['bid', 'ask', 'last']
-
-        for symbol in exFetT:
-            for ml in measurementlist:
-                if exFetT[symbol][ml] is not None:
-                    updtmsg = {}
-                    updtmsg["measurement"] = ml
-                    updtmsg["tags"] = {"ticker": symbol, "exchange": "binance"}
-                    updtmsg["fields"] = dict()
-                    updtmsg["fields"]['value'] = float(exFetT[symbol][ml])
-                    updtlist2.append(updtmsg)
-
-        self.newtickers = updtlist2
-
-    def myBalance(exApikey, exSec, exName):
-        try:
-            # Fetch account balance from an exchange
-            # only binance now!
-            print('Connecting to %s...' % exName)
-            exc = ccxt.binance({'apiKey': exApikey, 'secret': exSec})
-            excBalance = exc.fetch_balance()
-            time.sleep(5.0)
-            # Fetch tickers from an exchange
-            print('Fetching tickers from %s...' % exName)
-            excTickers = exc.fetch_tickers()
-            return _save_balances_to_dict(excBalance, excTickers,
-                                         exName)
-            #### todo Have to return dicts and call for function in main ###
-
-        except ccxt.DDoSProtection as e:
-            print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
-            return {}
-        except ccxt.RequestTimeout as e:
-            print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
-            return {}
-        except ccxt.ExchangeNotAvailable as e:
-            print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
-            return {}
-        except ccxt.AuthenticationError as e:
-            print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
-            return {}
-
-    @staticmethod
-    def _rightname(cur_cur): # todo Check TrueUSD currtnce status to ETH and BTC
-        if cur_cur.upper() != 'USDT':
-            return "%s/BTC" % cur_cur.upper()
-        else:
-            return "BTC/USDT"
-
-    # todo Create pure balance fetch function
-    @staticmethod
-    def _save_balances_to_dict(exBalance, exTicker, exName):
-        # output the result for each non zero currency which BTC amount more then 0.00005
-        # define new return dict
-        updtmsg = {}
-        # updtMsg['exData'] = []
-        # Total_BTC_amount
-        totalitarian = 0
-        # fill updtMsg dict
-        # write data in next format: [{"measurement":"Balances","tags":{"tkgid":"bta3"},"fields":{"BTC":0.64456585,"ETH":3.01}}]
-        updtmsg["measurement"] = "Balances"
-        updtmsg["tags"] = {"tkgid": exName}
-        updtmsg["fields"] = dict()
-
-        for cur_cur in exBalance['total'].keys():
-            if exBalance['total'][cur_cur] > 0.0001:
-                if cur_cur == 'BTC':
-                    updtmsg["fields"][cur_cur] = exBalance['total'][cur_cur]
-                    totalitarian = totalitarian + exBalance['total'][cur_cur]
-                elif cur_cur == 'USDT':
-                    updtmsg["fields"][cur_cur] = exBalance['total'][cur_cur]
-                    totalitarian = totalitarian + exBalance['total'][cur_cur] / exTicker[_rightname(cur_cur)]['close']
-                elif rightname(cur_cur) in exTicker:
-                    cur_cur_btcprice = exTicker[rightname(cur_cur)]['close']
-                    if exBalance['total'][cur_cur] * cur_cur_btcprice > 0.00005:
-                        updtmsg["fields"][cur_cur] = exBalance['total'][cur_cur]
-                        totalitarian = totalitarian + exBalance['total'][cur_cur] * cur_cur_btcprice
-
-        updtmsg["fields"]['TotalBTC'] = totalitarian
-        updtmsg["fields"]['TotalETH'] = totalitarian / exTicker[_rightname('ETH')]['close']
-        updtmsg["fields"]['TotalUSDT'] = float(totalitarian * exTicker[_rightname('USDT')]['close'])
-
-        updtlist = []
-        updtlist = [updtmsg]
-
-        return updtlist

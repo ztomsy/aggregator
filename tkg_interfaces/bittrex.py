@@ -1,6 +1,6 @@
 import ccxt
 import sys
-from .exconfig import settings
+from .exconfig import Settings
 
 class Bittrex:
 
@@ -8,13 +8,12 @@ class Bittrex:
 
     def __init__(self):
         self.curtickers = []
-        self.newtickers = []
 
     # Load exchange
     def loadexchange(self):
 
         try:
-            self.ex = ccxt.bittrex({"apiKey": settings.bittrex1ApiKey, "secret": settings.bittrex1Sec})
+            self.ex = ccxt.bittrex({"apiKey": Settings.bittrex1ApiKey, "secret": Settings.bittrex1Sec})
         except Exception as e:
             # print(type(e).__name__, e.args, str(e))
             print('Initialising bittrex: ', type(e).__name__, "!!!", e.args, ' ')

@@ -1,6 +1,6 @@
 import ccxt
 import sys
-from .exconfig import settings
+from .exconfig import Settings
 
 class Kraken:
 
@@ -14,7 +14,7 @@ class Kraken:
     def loadexchange(self):
 
         try:
-            self.ex = ccxt.kraken({"apiKey": settings.kraken1ApiKey, "secret": settings.kraken1Sec})
+            self.ex = ccxt.kraken({"apiKey": Settings.kraken1ApiKey, "secret": Settings.kraken1Sec})
         except Exception as e:
             # print(type(e).__name__, e.args, str(e))
             print('Initialising kraken: ', type(e).__name__, "!!!", e.args, ' ')
