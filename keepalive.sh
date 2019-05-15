@@ -1,6 +1,6 @@
 #!/bin/bash
 while
-cmd="python $@"
+cmd="python3 $@"
 do
 	echo "Keep alive $@"
 	echo "Press [CTRL+C] to stop.."
