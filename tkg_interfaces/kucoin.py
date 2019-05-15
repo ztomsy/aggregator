@@ -5,30 +5,39 @@ from .exconfig import Settings
 class Kucoin:
 
     ex = ...  # type: ccxt.base
+    logger = None
 
-    def __init__(self):
+    def __init__(self, logger: object = None):
+        self.logger = logger
         self.curtickers = []
-        self.newtickers = []
 
-    # Load exchange
+
+    @classmethod
     def loadexchange(self):
-
+        """
+        Load exchange
+        :return:
+        """
         try:
             self.ex = ccxt.kucoin({"apiKey": Settings.kucoin1['apiKey'], "secret": Settings.kucoin1['secret']})
         except Exception as e:
             # print(type(e).__name__, e.args, str(e))
-            print('Initialising kucoin: ', type(e).__name__, "!!!", e.args, ' ')
+            self.logger.error('Initialising kucoin: ', type(e).__name__, "!!!", e.args, ' ')
             sys.exit()
 
 
-    # Fetch exchanges tickers and wrap it into updtlist
+    @classmethod
     def fetchtickers(self):
+        """
+        Fetch exchanges tickers and wrap it into updtlist
+        :return:
+        """
         try:
             exFetT = self.ex.fetch_tickers()
         except Exception as e:
             # print(type(e).__name__, e.args, str(e))
-            print('While fetching tickers next error occur: ', type(e).__name__, "!!!", e.args)
-            print("Exiting")
+            self.logger.error('While fetching tickers next error occur: ', type(e).__name__, "!!!", e.args)
+            self.logger.error("Exiting")
             sys.exit()
         # Wrap raw ticker data from ccxt into list of necessary dicts
         # ticker_data, ticker=<symbol>,exchange=<exchange> bid=1,ask=10,last=17
@@ -50,38 +59,3 @@ class Kucoin:
                 updtlist.append(updtmsg)
 
         self.curtickers = updtlist
-
-    def splittickers(self):
-        # Fetch exchanges ticker for necessary pair
-        try:
-            exFetT = self.ex.fetch_tickers()
-        except Exception as e:
-            # print(type(e).__name__, e.args, str(e))
-            print('While fetching tickers next error occur: ', type(e).__name__, "!!!", e.args)
-            print("Exiting")
-            sys.exit()
-
-        # Wrap raw ticker data from ccxt into list of necessary dicts
-        # bid, ticker=<symbol>,exchange=<exchange> value=0.0758659
-        # ask, ticker=<symbol>,exchange=<exchange> value=0.0758654
-        # last, ticker=<symbol>,exchange=<exchange> value=0.0758655
-        # volume24, ticker=<symbol>,exchange=<exchange> value=100.256354
-        # exts, ticker=<symbol>,exchange=<exchange> value=  exchange timestamp
-
-
-        # define new return dict and list
-        updtlist = []
-        # define measurement list
-        measurementlist = ['bid', 'ask', 'last']
-
-        for symbol in exFetT:
-            for ml in measurementlist:
-                if exFetT[symbol][ml] is not None:
-                    updtmsg = {}
-                    updtmsg["measurement"] = ml
-                    updtmsg["tags"] = {"ticker": symbol, "exchange": "kucoin"}
-                    updtmsg["fields"] = dict()
-                    updtmsg["fields"]['value'] = float(exFetT[symbol][ml])
-                    updtlist.append(updtmsg)
-
-        self.newtickers = updtlist
