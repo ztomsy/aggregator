@@ -3,8 +3,6 @@ import datetime
 import sys
 import tkg_interfaces as TKG
 
-
-
 ####################
 option = TKG.Clipars(sys.argv[1:])
 ####################
@@ -21,17 +19,8 @@ def main():
         curtick = 0
         # Initialize data collecting for ask and bid to count mas
         ask_data, bid_data = [], []
-        # initialise necessary exchange class constructor(TODO convert to attr function)
-        if option.exchange.lower() == 'kucoin':
-            exc = TKG.Kucoin()
-        if option.exchange.lower() == 'binance':
-            exc = TKG.Binance(logger)
-        if option.exchange.lower() == 'kraken':
-            exc = TKG.Kraken()
-        if option.exchange.lower() == 'poloniex':
-            exc = TKG.Poloniex()
-        if option.exchange.lower() == 'bittrex':
-            exc = TKG.Bittrex()
+        # Init exchange class
+        exc = getattr(TKG, option.exchange.title())
         # load exchange
         exc.loadexchange()
         # initialise database class with name

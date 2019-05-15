@@ -15,7 +15,7 @@ def Clipars(args):
 
     #can be parsed from exchange list defined above
     parser.add_argument('-ex', '--exchange', type=str, required=True, help='''
-    Define exchange name in accordance to ccxt notation''')
+    Define exchange Name in accordance to ccxt notation''')
 
     parser.add_argument('-p', '--pause', type=float, required=False, default=0.5, help='''
     Define pause between fetching in seconds. Default is 0.5''')

@@ -17,9 +17,10 @@ class Binance():
         # self.ob = simpleOrderbook()
         # self.updtlist = []
 
+    @classmethod
     def loadexchange(self):
         """
-        Load exchange
+        Load exchange # TODO looks like useless function
         :return:
         """
         try:
@@ -61,6 +62,7 @@ class Binance():
             sys.exit()
         return exohlcv
 
+    @classmethod
     def fetchtickers(self):
         """
         Fetch exchanges ticker for necessary pair
