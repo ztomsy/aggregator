@@ -56,6 +56,10 @@ class Kucoin:
                 updtmsg["fields"]['last'] = exFetT[symbol]['last']
                 updtmsg["fields"]['baseVolume'] = exFetT[symbol]['baseVolume']
                 updtmsg["fields"]['quoteVolume'] = exFetT[symbol]['quoteVolume']
+                updtmsg["fields"]['spread'] = float(exFetT[symbol]['ask']) - float(exFetT[symbol]['bid'])
+                abmin = float(exFetT[symbol]['ask']) - float(exFetT[symbol]['bid'])
+                abplus = float(exFetT[symbol]['ask']) + float(exFetT[symbol]['bid'])
+                updtmsg["fields"]['spreadp'] = 2 * abmin / abplus
                 updtlist.append(updtmsg)
 
         self.curtickers = updtlist
