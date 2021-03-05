@@ -1,14 +1,14 @@
 import time
 import datetime
 import sys
-import tkg_interfaces as TKG
+import yat-aggregator as yat
 
 ####################
-option = TKG.Clipars(sys.argv[1:])
+option = yat.Clipars(sys.argv[1:])
 ####################
 
 # Init logger and define log_level verbosity
-logger = TKG.CustomLogger.setup_custom_logger(name='TickerFetcher', log_level='DEBUG')
+logger = yat.CustomLogger.setup_custom_logger(name='TickerFetcher', log_level='DEBUG')
 
 # define symbol for tickmas and ohlcvind(TODO Convert to parameter)
 symbol = "BTC/USDT"
@@ -20,11 +20,11 @@ def main():
         # Initialize data collecting for ask and bid to count mas
         ask_data, bid_data = [], []
         # Init exchange class
-        exc = getattr(TKG, option.exchange.title())
+        exc = getattr(yat, option.exchange.title())
         # load exchange
         exc.loadexchange()
         # initialise database class with name
-        dbclient = TKG.Influx('YAT')
+        dbclient = yat.Influx('YAT')
 
         while True:
             # Load and write to DB different data, defined as argument
@@ -53,15 +53,15 @@ def main():
                 bid_data.append(ticker['bid'])
                 if len(ask_data) > window+1:
                     del ask_data[0]
-                    ema1_ask = TKG.computeEMA(ask_data, MA1)
-                    ema2_ask = TKG.computeEMA(ask_data, MA2)
-                    ema3_ask = TKG.computeEMA(ask_data, MA3)
-                    ema4_ask = TKG.computeEMA(ask_data, MA4)
+                    ema1_ask = yat.computeEMA(ask_data, MA1)
+                    ema2_ask = yat.computeEMA(ask_data, MA2)
+                    ema3_ask = yat.computeEMA(ask_data, MA3)
+                    ema4_ask = yat.computeEMA(ask_data, MA4)
                     del bid_data[0]
-                    ema1_bid = TKG.computeEMA(bid_data, MA1)
-                    ema2_bid = TKG.computeEMA(bid_data, MA2)
-                    ema3_bid = TKG.computeEMA(bid_data, MA3)
-                    ema4_bid = TKG.computeEMA(bid_data, MA4)
+                    ema1_bid = yat.computeEMA(bid_data, MA1)
+                    ema2_bid = yat.computeEMA(bid_data, MA2)
+                    ema3_bid = yat.computeEMA(bid_data, MA3)
+                    ema4_bid = yat.computeEMA(bid_data, MA4)
                     updtmsg = dict()
                     updtlist = list()
                     updtmsg["measurement"] = "ticker_mas"
@@ -90,13 +90,13 @@ def main():
                 # volume = [x[5] for x in ohlcv]
 
                 # Calculate RSI
-                rsi = TKG.computeRSI(closep, n=14)
+                rsi = yat.computeRSI(closep, n=14)
 
                 # Compute MACD (Divergence between 2 ma)
                 # and count ema of macd for fun
                 # nema = 9
-                macd, emaslow, emafast = TKG.computeMACD(closep, slow=26, fast=12)
-                # ema9 = TKG.computeEMA(macd, nema)
+                macd, emaslow, emafast = yat.computeMACD(closep, slow=26, fast=12)
+                # ema9 = yat.computeEMA(macd, nema)
                 updtmsg = dict()
                 updtlist = list()
                 updtmsg["measurement"] = "ohlcvind"

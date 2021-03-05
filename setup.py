@@ -6,11 +6,11 @@ except ImportError:
 config = {
     'description': 'Project is aim to store data from exchanges api to remote db',
     'author': 'Nekrasov Pavel',
-    'version': '0.0.4.2',
+    'version': '0.1.1',
     'install_requires': [''],
     'packages': ['NAME'],
     'scripts': [],
-    'name': 'tkg-interfaces'
+    'name': 'yat-aggregator'
 }
 
 setup(**config)

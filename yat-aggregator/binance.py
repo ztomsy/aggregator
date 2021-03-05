@@ -6,6 +6,7 @@ import numpy as np  # import numpy to return np array as result of some function
 # from .orderbook3 import simpleOrderbook  # basic class for ob
 from .exconfig import Settings
 
+
 class Binance():
 
     ex = ...  # type: ccxt.base
@@ -24,9 +25,11 @@ class Binance():
         :return:
         """
         try:
-            self.ex = ccxt.binance({"apiKey": Settings.binance2['apiKey'], "secret": Settings.binance2['secret']})
+            self.ex = ccxt.binance(
+                {"apiKey": Settings.binance2['apiKey'], "secret": Settings.binance2['secret']})
         except Exception as e:
-            self.logger.error('While loading Binance next error occur: ', type(e).__name__, "!!!", e.args)
+            self.logger.error('While loading Binance next error occur: ', type(
+                e).__name__, "!!!", e.args)
             self.logger.error("Exiting")
             sys.exit()
 
@@ -37,9 +40,11 @@ class Binance():
         :return:
         """
         try:
-            exFetobs = self.ex.fetch_order_book(symbol)  # fetch_order_book(symbol, limit=100)
+            # fetch_order_book(symbol, limit=100)
+            exFetobs = self.ex.fetch_order_book(symbol)
         except Exception as e:
-            self.logger.error('While fetching orderbook next error occur: ', type(e).__name__, "!!!", e.args)
+            self.logger.error('While fetching orderbook next error occur: ', type(
+                e).__name__, "!!!", e.args)
             self.logger.error("Exiting")
             sys.exit()
         # Wrap ob from ccxt into our ob class
@@ -55,9 +60,11 @@ class Binance():
         Fetch exchanges ticker for necessary pair
         """
         try:
-            exohlcv = self.ex.fetch_ohlcv(symbol, timeframe=frame, since=None, limit=None)
+            exohlcv = self.ex.fetch_ohlcv(
+                symbol, timeframe=frame, since=None, limit=None)
         except Exception as e:
-            self.logger.error('While fetching ohlcv next error occur: ', type(e).__name__, "!!!", e.args)
+            self.logger.error('While fetching ohlcv next error occur: ', type(
+                e).__name__, "!!!", e.args)
             self.logger.error("Exiting")
             sys.exit()
         return exohlcv
@@ -71,7 +78,8 @@ class Binance():
         try:
             exFetT = self.ex.fetch_bids_asks()
         except Exception as e:
-            self.logger.error('While fetching tickers next error occur: ', type(e).__name__, "!!!", e.args)
+            self.logger.error('While fetching tickers next error occur: ', type(
+                e).__name__, "!!!", e.args)
             self.logger.error("Exiting")
             sys.exit()
         # Wrap raw ticker data from ccxt into list of necessary dicts
@@ -90,10 +98,13 @@ class Binance():
                 updtmsg["fields"]['bid'] = exFetT[symbol]['bid']
                 updtmsg["fields"]['ask'] = exFetT[symbol]['ask']
                 updtmsg["fields"]['last'] = exFetT[symbol]['last']
-                updtmsg["fields"]['spread'] = float(exFetT[symbol]['ask']) - float(exFetT[symbol]['bid'])
-                abmin = float(exFetT[symbol]['ask']) - float(exFetT[symbol]['bid'])
-                abplus = float(exFetT[symbol]['ask']) + float(exFetT[symbol]['bid'])
-                updtmsg["fields"]['spreadp'] = 2 * abmin / abplus 
+                updtmsg["fields"]['spread'] = float(
+                    exFetT[symbol]['ask']) - float(exFetT[symbol]['bid'])
+                abmin = float(exFetT[symbol]['ask']) - \
+                    float(exFetT[symbol]['bid'])
+                abplus = float(exFetT[symbol]['ask']) + \
+                    float(exFetT[symbol]['bid'])
+                updtmsg["fields"]['spreadp'] = 2 * abmin / abplus
                 updtlist.append(updtmsg)
 
         self.curtickers = updtlist
@@ -107,7 +118,8 @@ class Binance():
             exFetT = self.ex.fetch_bids_asks()
         except Exception as e:
             # print(type(e).__name__, e.args, str(e))
-            print('While fetching tickers next error occur: ', type(e).__name__, "!!!", e.args)
+            print('While fetching tickers next error occur: ',
+                  type(e).__name__, "!!!", e.args)
             print("Exiting")
             sys.exit()
         # Wrap raw ticker data from ccxt into list of necessary triangles result dicts
@@ -128,13 +140,15 @@ class Binance():
         trilist = self.get_basic_triangles_from_markets(self.ex.markets)
         filteredtrilist = self.get_all_triangles(trilist, startcurlist)
         matr = self.get_price_matr(exFetT)
-        finaltrilist = self.fill_triangles(filteredtrilist, startcurlist, exFetT, 0.005)
+        finaltrilist = self.fill_triangles(
+            filteredtrilist, startcurlist, exFetT, 0.005)
 
         for tri in finaltrilist:
             if tri["result"] is not None:
                 updtmsg = {}
                 updtmsg["measurement"] = "ticker_derivatives"
-                updtmsg["tags"] = {"ticker": tri["triangle"], "exchange": "binance"}
+                updtmsg["tags"] = {
+                    "ticker": tri["triangle"], "exchange": "binance"}
                 updtmsg["fields"] = dict()
                 updtmsg["fields"]['result'] = tri['result']
                 updtlist.append(updtmsg)
@@ -159,7 +173,7 @@ class Binance():
             print('Fetching tickers from %s...' % exName)
             excTickers = exc.fetch_tickers()
             return self._save_balances_to_dict(excBalance, excTickers,
-                                         exName)
+                                               exName)
         except ccxt.DDoSProtection as e:
             print(type(e).__name__, e.args, 'DDoS Protection (ignoring)')
             return {}
@@ -167,10 +181,12 @@ class Binance():
             print(type(e).__name__, e.args, 'Request Timeout (ignoring)')
             return {}
         except ccxt.ExchangeNotAvailable as e:
-            print(type(e).__name__, e.args, 'Exchange Not Available due to downtime or maintenance (ignoring)')
+            print(type(e).__name__, e.args,
+                  'Exchange Not Available due to downtime or maintenance (ignoring)')
             return {}
         except ccxt.AuthenticationError as e:
-            print(type(e).__name__, e.args, 'Authentication Error (missing API keys, ignoring)')
+            print(type(e).__name__, e.args,
+                  'Authentication Error (missing API keys, ignoring)')
             return {}
 
     @staticmethod
@@ -190,9 +206,9 @@ class Binance():
         # Total_BTC_amount
         totalitarian = 0
         # fill updtMsg dict
-        # write data in next format: [{"measurement":"Balances","tags":{"tkgid":"bta3"},"fields":{"BTC":0.64456585,"ETH":3.01}}]
+        # write data in next format: [{"measurement":"Balances","tags":{"yatid":"bta3"},"fields":{"BTC":0.64456585,"ETH":3.01}}]
         updtmsg["measurement"] = "Balances"
-        updtmsg["tags"] = {"tkgid": exName}
+        updtmsg["tags"] = {"yatid": exName}
         updtmsg["fields"] = dict()
 
         for cur_cur in exBalance['total'].keys():
@@ -205,14 +221,18 @@ class Binance():
                     totalitarian = totalitarian + exBalance['total'][cur_cur] / exTicker[self.getRightName(cur_cur)][
                         'close']
                 elif self.getRightName(cur_cur) in exTicker:
-                    cur_cur_btcprice = exTicker[self.getRightName(cur_cur)]['close']
+                    cur_cur_btcprice = exTicker[self.getRightName(
+                        cur_cur)]['close']
                     if exBalance['total'][cur_cur] * cur_cur_btcprice > 0.00005:
                         updtmsg["fields"][cur_cur] = exBalance['total'][cur_cur]
-                        totalitarian = totalitarian + exBalance['total'][cur_cur] * cur_cur_btcprice
+                        totalitarian = totalitarian + \
+                            exBalance['total'][cur_cur] * cur_cur_btcprice
 
         updtmsg["fields"]['TotalBTC'] = totalitarian
-        updtmsg["fields"]['TotalETH'] = totalitarian / exTicker[self.getRightName('ETH')]['close']
-        updtmsg["fields"]['TotalUSDT'] = float(totalitarian * exTicker[self.getRightName('USDT')]['close'])
+        updtmsg["fields"]['TotalETH'] = totalitarian / \
+            exTicker[self.getRightName('ETH')]['close']
+        updtmsg["fields"]['TotalUSDT'] = float(
+            totalitarian * exTicker[self.getRightName('USDT')]['close'])
 
         updtlist = []
         updtlist = [updtmsg]
@@ -222,7 +242,7 @@ class Binance():
 # TODO move to other class
     @staticmethod
     def get_price_matr(tickers):
-        matr=dict()
+        matr = dict()
         for symbol in tickers:
             base, quote = symbol.split('/')
             bb = dict(mprice=tickers[symbol]['bid'])
@@ -234,21 +254,19 @@ class Binance():
         for symbol in markets:
 
             if markets[symbol]["active"]:
-                graph.add_edge(markets[symbol]['base'], markets[symbol]['quote'])
+                graph.add_edge(markets[symbol]['base'],
+                               markets[symbol]['quote'])
 
         # finding the triangles as the basis cycles in graph
         triangles = list(nx.cycle_basis(graph))
 
-
-        #todo find 4+ cliques, define order, build new list with directions and count em
+        # todo find 4+ cliques, define order, build new list with directions and count em
         # cliques = list(nx.find_cliques(graph))
         # newcliquelist = []
         # for a in cliques:
         #     if len(a)>3:
         #         newcliquelist.append(a)
         # print(newcliquelist)
-
-
 
         return triangles
 
@@ -264,8 +282,10 @@ class Binance():
                     if p > 0:
                         cur = np.roll(cur, 3 - p).tolist()
 
-                    filtered_triangles.append(list((start_currency, cur[1], cur[2])))
-                    filtered_triangles.append(list((start_currency, cur[2], cur[1])))
+                    filtered_triangles.append(
+                        list((start_currency, cur[1], cur[2])))
+                    filtered_triangles.append(
+                        list((start_currency, cur[2], cur[1])))
 
         return filtered_triangles
 
@@ -322,12 +342,10 @@ class Binance():
 
                 if result != 0:
                     tri_dict["leg-orders"] = tri_dict["leg1-order"] + "-" + tri_dict["leg2-order"] + "-" + \
-                                             tri_dict["leg3-order"]
+                        tri_dict["leg3-order"]
 
                 tri_dict["result"] = result
 
                 tri_list.append(tri_dict)
 
         return tri_list
-
-

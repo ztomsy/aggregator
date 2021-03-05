@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .context import tkg_interfaces
+from .context import yat-aggregator
 
 import unittest
 
