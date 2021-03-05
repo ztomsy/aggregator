@@ -1,7 +1,7 @@
 import time
 import datetime
 import sys
-import yat-aggregator as yat
+import aggregator as yat
 
 ####################
 option = yat.Clipars(sys.argv[1:])

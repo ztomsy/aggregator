@@ -1,4 +1,4 @@
-# yat-aggregator
+# Data aggregator
 
 ## Description
 
@@ -23,7 +23,7 @@ unrevealing arbitrage opportunities before it happens.
 After clonning repository from git do next
 
 ```bash
-cd yat-aggregator
+cd aggregator
 python3 -m pip install --upgrade pip 
 python3 -m pip install -r requirements.txt
 ```

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .context import yat-aggregator
+from .context import aggregator
 
 import unittest
 

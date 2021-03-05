@@ -10,7 +10,7 @@ config = {
     'install_requires': [''],
     'packages': ['NAME'],
     'scripts': [],
-    'name': 'yat-aggregator'
+    'name': 'aggregator'
 }
 
 setup(**config)
