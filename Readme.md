@@ -2,8 +2,7 @@
 
 ## Description
 
-With current developments in Cryptocurrency market, 
-hot topic is applying deep learning models into trading and then predicting the price trends using those models and trading automatically with bots.
+With current developments in Cryptocurrency market, hot topic is applying deep learning models into trading and then predicting the price trends using those models and trading automatically with bots.
 
 Deep learning is different than traditional machine learning and it is highly dependent on how much and how good your data is.
 
