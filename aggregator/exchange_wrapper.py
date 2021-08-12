@@ -33,22 +33,17 @@ class ccxtExchangeWrapper:
         self.tickers = dict()
         self.markets = dict()
 
-    # generic method for loading markets could be redefined in custom exchange wrapper
     def _load_markets(self):
         return self._ccxt.load_markets()
 
-    # generic method for fetching tickers could be redefined in custom exchange wrapper
     def _fetch_tickers(self):
         return self._ccxt.fetch_tickers()
 
-    # generic method for fetching ohlcv
     def _fetch_ohlcv(self, symbol, timeframe='1m', since=None, limit=None):
         return self._ccxt.fetch_ohlcv(symbol, symbol, timeframe, since, limit, params={})
 
-    # generic method for fetching orderbook
     def _fetch_order_book(self, symbol):
         return self._ccxt.fetch_order_book(self, symbol, limit=None, params={})
-
 
     def get_exchange_wrapper_id(self):
         return "generic"

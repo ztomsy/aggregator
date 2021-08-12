@@ -1,9 +1,8 @@
 import ccxt
 import sys
 import time
-import networkx as nx  # use networkX to find all triangles on graph
-import numpy as np  # import numpy to return np array as result of some functions
-# from .orderbook3 import simpleOrderbook  # basic class for ob
+import networkx as nx
+import numpy as np
 from .exconfig import Settings
 
 
@@ -15,15 +14,10 @@ class Binance():
         self.logger = logger
         self.curtickers = []
         self.curderivatives = []
-        # self.ob = simpleOrderbook()
-        # self.updtlist = []
 
     @classmethod
     def loadexchange(self):
-        """
-        Load exchange # TODO looks like useless function
-        :return:
-        """
+        """Load exchange"""
         try:
             self.ex = ccxt.binance(
                 {"apiKey": Settings.binance2['apiKey'], "secret": Settings.binance2['secret']})
@@ -34,11 +28,7 @@ class Binance():
             sys.exit()
 
     def fetchob(self, symbol):
-        """
-        Fetch exchanges ticker for necessary pair
-        :param symbol:
-        :return:
-        """
+        """Fetch exchanges ticker for necessary pair"""
         try:
             # fetch_order_book(symbol, limit=100)
             exFetobs = self.ex.fetch_order_book(symbol)
@@ -47,18 +37,9 @@ class Binance():
                 e).__name__, "!!!", e.args)
             self.logger.error("Exiting")
             sys.exit()
-        # Wrap ob from ccxt into our ob class
-        # for _ in exFetobs['bids']:
-        #     self.ob._bid_book[_[0]] = _[1]
-        #     self.ob._bid_book_prices.append(_[0])
-        # for _ in exFetobs['asks']:
-        #     self.ob._ask_book[_[0]] = _[1]
-        #     self.ob._ask_book_prices.append(_[0])
 
     def fetchohlcv(self, symbol, frame='1m'):
-        """
-        Fetch exchanges ticker for necessary pair
-        """
+        """Fetch exchanges ticker for necessary pair"""
         try:
             exohlcv = self.ex.fetch_ohlcv(
                 symbol, timeframe=frame, since=None, limit=None)
@@ -71,10 +52,7 @@ class Binance():
 
     @classmethod
     def fetchtickers(self):
-        """
-        Fetch exchanges ticker for necessary pair
-        :return:
-        """
+        """Fetch exchanges ticker for necessary pair"""
         try:
             exFetT = self.ex.fetch_bids_asks()
         except Exception as e:
@@ -82,10 +60,6 @@ class Binance():
                 e).__name__, "!!!", e.args)
             self.logger.error("Exiting")
             sys.exit()
-        # Wrap raw ticker data from ccxt into list of necessary dicts
-        # ticker_data, ticker=<symbol>,exchange=<exchange> bid=1,ask=10,last=17
-
-        # define new return dict and list
         updtlist = []
 
         for symbol in exFetT:
@@ -122,19 +96,10 @@ class Binance():
                   type(e).__name__, "!!!", e.args)
             print("Exiting")
             sys.exit()
-        # Wrap raw ticker data from ccxt into list of necessary triangles result dicts
-
-        # define new return dict and list
         updtlist = []
-
-        # define triangle lists
         trilist = []
         filteredtrilist = []
         finaltrilist = []
-
-        # define start currencies list
-        # todo get quote currencies list from exchange by adding unique quote currencies into list
-
         startcurlist = ['BTC']
 
         trilist = self.get_basic_triangles_from_markets(self.ex.markets)
@@ -169,7 +134,6 @@ class Binance():
             exc = ccxt.binance({'apiKey': exApikey, 'secret': exSec})
             excBalance = exc.fetch_balance()
             time.sleep(5.0)
-            # Fetch tickers from an exchange
             print('Fetching tickers from %s...' % exName)
             excTickers = exc.fetch_tickers()
             return self._save_balances_to_dict(excBalance, excTickers,
@@ -196,17 +160,10 @@ class Binance():
         else:
             return "BTC/USDT"
 
-    # TODO Create pure balance fetch function
     @staticmethod
     def _save_balances_to_dict(self, exBalance, exTicker, exName):
-        # output the result for each non zero currency which BTC amount more then 0.00005
-        # define new return dict
         updtmsg = {}
-        # updtMsg['exData'] = []
-        # Total_BTC_amount
-        totalitarian = 0
-        # fill updtMsg dict
-        # write data in next format: [{"measurement":"Balances","tags":{"yatid":"bta3"},"fields":{"BTC":0.64456585,"ETH":3.01}}]
+        total_btc = 0
         updtmsg["measurement"] = "Balances"
         updtmsg["tags"] = {"yatid": exName}
         updtmsg["fields"] = dict()
@@ -215,31 +172,30 @@ class Binance():
             if exBalance['total'][cur_cur] > 0.0001:
                 if cur_cur == 'BTC':
                     updtmsg["fields"][cur_cur] = exBalance['total'][cur_cur]
-                    totalitarian = totalitarian + exBalance['total'][cur_cur]
+                    total_btc = total_btc + exBalance['total'][cur_cur]
                 elif cur_cur == 'USDT':
                     updtmsg["fields"][cur_cur] = exBalance['total'][cur_cur]
-                    totalitarian = totalitarian + exBalance['total'][cur_cur] / exTicker[self.getRightName(cur_cur)][
+                    total_btc = total_btc + exBalance['total'][cur_cur] / exTicker[self.getRightName(cur_cur)][
                         'close']
                 elif self.getRightName(cur_cur) in exTicker:
                     cur_cur_btcprice = exTicker[self.getRightName(
                         cur_cur)]['close']
                     if exBalance['total'][cur_cur] * cur_cur_btcprice > 0.00005:
                         updtmsg["fields"][cur_cur] = exBalance['total'][cur_cur]
-                        totalitarian = totalitarian + \
+                        total_btc = total_btc + \
                             exBalance['total'][cur_cur] * cur_cur_btcprice
 
-        updtmsg["fields"]['TotalBTC'] = totalitarian
-        updtmsg["fields"]['TotalETH'] = totalitarian / \
+        updtmsg["fields"]['TotalBTC'] = total_btc
+        updtmsg["fields"]['TotalETH'] = total_btc / \
             exTicker[self.getRightName('ETH')]['close']
         updtmsg["fields"]['TotalUSDT'] = float(
-            totalitarian * exTicker[self.getRightName('USDT')]['close'])
+            total_btc * exTicker[self.getRightName('USDT')]['close'])
 
         updtlist = []
         updtlist = [updtmsg]
 
         return updtlist
 
-# TODO move to other class
     @staticmethod
     def get_price_matr(tickers):
         matr = dict()
@@ -257,16 +213,7 @@ class Binance():
                 graph.add_edge(markets[symbol]['base'],
                                markets[symbol]['quote'])
 
-        # finding the triangles as the basis cycles in graph
         triangles = list(nx.cycle_basis(graph))
-
-        # todo find 4+ cliques, define order, build new list with directions and count em
-        # cliques = list(nx.find_cliques(graph))
-        # newcliquelist = []
-        # for a in cliques:
-        #     if len(a)>3:
-        #         newcliquelist.append(a)
-        # print(newcliquelist)
 
         return triangles
 

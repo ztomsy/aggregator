@@ -8,5 +8,5 @@ from .exconfig import Settings
 from .influx import Influx
 from .clipars import Clipars
 from .indicators import *
-# from .orderbook3 import *
+from .orderbook3 import *
 from .logger import CustomLogger

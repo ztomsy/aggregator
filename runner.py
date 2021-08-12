@@ -7,47 +7,33 @@ import aggregator as yat
 option = yat.Clipars(sys.argv[1:])
 ####################
 
-# Init logger and define log_level verbosity
 logger = yat.CustomLogger.setup_custom_logger(name='TickerFetcher', log_level='DEBUG')
 
-# define symbol for tickmas and ohlcvind(TODO Convert to parameter)
 symbol = "BTC/USDT"
 
 def main():
     try:
-        # define counter
         curtick = 0
-        # Initialize data collecting for ask and bid to count mas
         ask_data, bid_data = [], []
-        # Init exchange class
         exc = getattr(yat, option.exchange.title())
-        # load exchange
         exc.loadexchange()
-        # initialise database class with name
         dbclient = yat.Influx('YAT')
 
         while True:
-            # Load and write to DB different data, defined as argument
             if option.fetchtype.lower() == 'ticker':
-                # load tickers
                 exc.fetchtickers()
-                # save to db
                 dbclient.writepoints(exc.curtickers)
 
             if option.fetchtype.lower() == 'derivative':
-                # load derivative data
                 exc.fetchderivatives()
-                # write derivatives to db
                 dbclient.writepoints(exc.curderivatives)
 
             if option.fetchtype.lower() == 'tickmas':
-                # define mas
                 MA1 = 100
                 MA2 = 50
                 MA3 = 20
                 MA4 = 10
                 window = 100
-                # write mas data to db
                 ticker = exc.ex.fetch_ticker(symbol)
                 ask_data.append(ticker['ask'])
                 bid_data.append(ticker['bid'])
@@ -80,7 +66,6 @@ def main():
                     dbclient.writepoints(updtlist)
 
             if option.fetchtype.lower() == 'ohlcvind':
-                # load ohlcv 1 min candles
                 ohlcv = exc.fetchohlcv(symbol, frame='1m')
                 date = [x[0] for x in ohlcv]
                 closep = [x[4] for x in ohlcv]
@@ -89,14 +74,9 @@ def main():
                 # openp = [x[1] for x in ohlcv]
                 # volume = [x[5] for x in ohlcv]
 
-                # Calculate RSI
                 rsi = yat.computeRSI(closep, n=14)
-
-                # Compute MACD (Divergence between 2 ma)
-                # and count ema of macd for fun
-                # nema = 9
                 macd, emaslow, emafast = yat.computeMACD(closep, slow=26, fast=12)
-                # ema9 = yat.computeEMA(macd, nema)
+
                 updtmsg = dict()
                 updtlist = list()
                 updtmsg["measurement"] = "ohlcvind"
@@ -108,29 +88,8 @@ def main():
                 updtmsg["fields"]['macd12_26_1'] = macd[-1]
 
                 updtlist.append(updtmsg)
-                # save to db
-                dbclient.writepoints(updtlist)
 
-            # if option.fetchtype.lower() == 'ob':
-            #     # load exchange
-            #     exc.loadexchange()
-            #     # load ob
-            #     exc.fetchob(symbol)
-            #     updtlist = list()
-            #     # prepare ask update message
-            #     askupdtmsg = dict()
-            #     askupdtmsg["measurement"] = symbol
-            #     askupdtmsg["tags"] = {"side": "ask", "exchange": option.exchange.lower()}
-            #     askupdtmsg["fields"] = exc.ob._ask_book
-            #     updtlist.append(askupdtmsg)
-            #     # prepare bid update message
-            #     bidupdtmsg = dict()
-            #     bidupdtmsg["measurement"] = symbol
-            #     bidupdtmsg["tags"] = {"side": "bid", "exchange": option.exchange.lower()}
-            #     bidupdtmsg["fields"] = exc.ob._bid_book
-            #     updtlist.append(bidupdtmsg)
-            #     # save to db
-            #     dbclient.writepoints(updtlist)
+                dbclient.writepoints(updtlist)
 
             msg1 = "#%s %s InfluxDB updated %s from %s" % (curtick,
                                                            datetime.datetime.now(),
