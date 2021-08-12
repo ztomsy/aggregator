@@ -14,35 +14,24 @@ class Kucoin:
 
     @classmethod
     def loadexchange(self):
-        """
-        Load exchange
-        :return:
-        """
+        """Load exchange"""
         try:
             self.ex = ccxt.kucoin({"apiKey": Settings.kucoin1['apiKey'], "secret": Settings.kucoin1['secret']})
         except Exception as e:
-            # print(type(e).__name__, e.args, str(e))
             self.logger.error('Initialising kucoin: ', type(e).__name__, "!!!", e.args, ' ')
             sys.exit()
 
 
     @classmethod
     def fetchtickers(self):
-        """
-        Fetch exchanges tickers and wrap it into updtlist
-        :return:
-        """
+        """Fetch exchanges tickers and wrap it into updtlist"""
         try:
             exFetT = self.ex.fetch_tickers()
         except Exception as e:
-            # print(type(e).__name__, e.args, str(e))
             self.logger.error('While fetching tickers next error occur: ', type(e).__name__, "!!!", e.args)
             self.logger.error("Exiting")
             sys.exit()
-        # Wrap raw ticker data from ccxt into list of necessary dicts
-        # ticker_data, ticker=<symbol>,exchange=<exchange> bid=1,ask=10,last=17
 
-        # define new return dict and list
         updtlist = []
 
         for symbol in exFetT:

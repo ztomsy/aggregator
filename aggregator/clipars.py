@@ -13,7 +13,6 @@ def Clipars(args):
     ohlcvind = to write indicators on ohlcv candle data
     ''')
 
-    #can be parsed from exchange list defined above
     parser.add_argument('-ex', '--exchange', type=str, required=True, help='''
     Define exchange Name in accordance to ccxt notation''')
 
